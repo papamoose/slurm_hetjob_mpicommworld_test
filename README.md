@@ -51,7 +51,7 @@ srun --het-group=0 -n3 ./test_mpi_comm_world : --het-group=1 -n3 ./test_mpi_comm
 
 $ sbatch het.sb 
 
-$ cat slurm-120.out
+$ cat slurm-120.out | sort -k2n
 Rank 0 generated UUID: 11457598-914e-4010-b0b5-4b557693eea8
 Rank 0 received UUID: 11457598-914e-4010-b0b5-4b557693eea8
 Rank 1 received UUID: 11457598-914e-4010-b0b5-4b557693eea8
