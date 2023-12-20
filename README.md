@@ -3,33 +3,88 @@
 Don't salloc or sbatch.
 
 ```
-$ srun -N1 --overlap -n2 ./test_mpi_comm_world --debug : -n2 ./test_mpi_comm_world
-srun: job 88 queued and waiting for resources
-srun: job 88 has been allocated resources
-Rank 0 generated UUID: b396b5d9-8221-455e-846c-52b28de28b5f
-Rank 1 received UUID: b396b5d9-8221-455e-846c-52b28de28b5f
-Rank 2 received UUID: b396b5d9-8221-455e-846c-52b28de28b5f
-Rank 3 received UUID: b396b5d9-8221-455e-846c-52b28de28b5f
-Results:
-Generated UUID: b396b5d9-8221-455e-846c-52b28de28b5f
-Correct results: 3
-Incorrect results: 0
+$ srun -N1 --overlap -n3 ./test_mpi_comm_world : -n3 ./test_mpi_comm_world | sort -k2n
+srun: job 116 queued and waiting for resources
+srun: job 116 has been allocated resources
+Rank 0 generated UUID: ca53b144-a762-4cfc-89dc-47160a740420
+Rank 0 received UUID: ca53b144-a762-4cfc-89dc-47160a740420
+Rank 1 received UUID: ca53b144-a762-4cfc-89dc-47160a740420
+Rank 2 received UUID: ca53b144-a762-4cfc-89dc-47160a740420
+Rank 3 received UUID: ca53b144-a762-4cfc-89dc-47160a740420
+Rank 4 received UUID: ca53b144-a762-4cfc-89dc-47160a740420
+Rank 5 received UUID: ca53b144-a762-4cfc-89dc-47160a740420
 ```
 
 ## salloc -N1 : -N1
 ```
 $ salloc -N1 : -N1
-salloc: Pending job allocation 90
-salloc: job 90 queued and waiting for resources
-salloc: job 90 has been allocated resources
-salloc: Granted job allocation 90
+salloc: Pending job allocation 110
+salloc: job 110 queued and waiting for resources
+salloc: job 110 has been allocated resources
+salloc: Granted job allocation 110
 salloc: Nodes athena are ready for job
 
-$ srun --het-group=0 -n1 ./test_mpi_comm_world --debug : --het-group=1 -n1 ./test_mpi_comm_world
-Rank 0 generated UUID: 2c659f8c-1ce5-4286-a65c-b7656d593f9c
-Rank 1 received UUID: 2c659f8c-1ce5-4286-a65c-b7656d593f9c
-Results:
-Generated UUID: 2c659f8c-1ce5-4286-a65c-b7656d593f9c
-Correct results: 1
-Incorrect results: 0
+$ srun --het-group=0 -n3 ./test_mpi_comm_world : --het-group=1 -n3 ./test_mpi_comm_world | sort -k2n
+Rank 0 generated UUID: 92e83ec9-746e-432e-9f3f-8e7cc28cf086
+Rank 0 received UUID: 92e83ec9-746e-432e-9f3f-8e7cc28cf086
+Rank 1 received UUID: 92e83ec9-746e-432e-9f3f-8e7cc28cf086
+Rank 2 received UUID: 92e83ec9-746e-432e-9f3f-8e7cc28cf086
+Rank 3 received UUID: 92e83ec9-746e-432e-9f3f-8e7cc28cf086
+Rank 4 received UUID: 92e83ec9-746e-432e-9f3f-8e7cc28cf086
+Rank 5 received UUID: 92e83ec9-746e-432e-9f3f-8e7cc28cf086
+```
+
+## sbatch
+
+
+
+```
+$ cat het.sb 
+#!/bin/bash
+#SBATCH --partition=cpu
+#SBATCH -N1
+#SBATCH hetjob
+#SBATCH -N1
+
+srun --het-group=0 -n3 ./test_mpi_comm_world : --het-group=1 -n3 ./test_mpi_comm_world
+
+
+$ sbatch het.sb 
+
+$ cat slurm-120.out
+Rank 0 generated UUID: 11457598-914e-4010-b0b5-4b557693eea8
+Rank 0 received UUID: 11457598-914e-4010-b0b5-4b557693eea8
+Rank 1 received UUID: 11457598-914e-4010-b0b5-4b557693eea8
+Rank 2 received UUID: 11457598-914e-4010-b0b5-4b557693eea8
+Rank 3 received UUID: 11457598-914e-4010-b0b5-4b557693eea8
+Rank 4 received UUID: 11457598-914e-4010-b0b5-4b557693eea8
+Rank 5 received UUID: 11457598-914e-4010-b0b5-4b557693eea8
+```
+
+
+## sbatch that does not work
+
+```
+$ cat het.sb 
+#!/bin/bash
+#SBATCH --partition=cpu
+#SBATCH -N1
+#SBATCH hetjob
+#SBATCH -N1
+
+srun --het-group=0 -n3 ./test_mpi_comm_world &
+srun --het-group=1 -n3 ./test_mpi_comm_world &
+wait
+```
+
+```
+$ cat slurm-122.out | sort -k2n
+Rank 0 generated UUID: 2cd835a4-e199-4bec-9856-3f2a1fa6b239
+Rank 0 generated UUID: 9e2e1095-6040-4b16-a5f7-a06442b1759e
+Rank 0 received UUID: 2cd835a4-e199-4bec-9856-3f2a1fa6b239
+Rank 0 received UUID: 9e2e1095-6040-4b16-a5f7-a06442b1759e
+Rank 1 received UUID: 2cd835a4-e199-4bec-9856-3f2a1fa6b239
+Rank 1 received UUID: 9e2e1095-6040-4b16-a5f7-a06442b1759e
+Rank 2 received UUID: 2cd835a4-e199-4bec-9856-3f2a1fa6b239
+Rank 2 received UUID: 9e2e1095-6040-4b16-a5f7-a06442b1759e
 ```
